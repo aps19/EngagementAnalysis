@@ -25,8 +25,9 @@ if __name__ == "__main__":
     # Set up argparse for command line arguments
     parser = argparse.ArgumentParser(description="Prepare data for Engagement Prediction Model")
     
-    parser.add_argument('--data_dir', type=str, default='/mnt/d/Projects/engagement_prediction/EngagementPrediction/data/processed_dataset', help='Folder containing the dataset')
-    parser.add_argument('--label_file', type=str, default='/mnt/d/Projects/engagement_prediction/EngagementPrediction/data/train_engagement_labels.xlsx', help='Path to the label file')
+    parser.add_argument('--data_dir', type=str, default='data/processed_dataset', help='Folder containing the dataset')
+    parser.add_argument('--dataset_fraction', type=float, default=0.01, help='Fraction of the dataset to use')
+    parser.add_argument('--label_file', type=str, default='data/train_engagement_labels.xlsx', help='Path to the label file')
     parser.add_argument('--label_column', type=str, default='label', help='Column name for labels')
     parser.add_argument('--exclude_columns', type=list, default=['frame', 'timestamp'], help='Columns to exclude from features')
     parser.add_argument('--missing_value_strategy', type=str, default='interpolate', help='Strategy to handle missing values')
@@ -62,9 +63,10 @@ if __name__ == "__main__":
     # Prepare data
     train_loader, val_loader, train_dataset, val_dataset = prepare_data(config, logger)
     
+    logger.info(f"Total samples used: {len(train_dataset) + len(val_dataset)}")
     logger.info(f"Training data: {len(train_loader.dataset)} samples")
     logger.info(f"Validation data: {len(val_loader.dataset)} samples")
-
+    
     # Display progress in loading batches
     for batch_idx, (data, labels, seq_lengths) in tqdm(enumerate(train_loader), total=len(train_loader), desc="Loading Training Data"):
         logger.info(f"Batch {batch_idx + 1}: Data shape: {data.shape}, Labels shape: {labels.shape}")

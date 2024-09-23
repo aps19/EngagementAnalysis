@@ -27,19 +27,19 @@ class Config:
         self.data_dir = 'data/processed_dataset'  # Path to the folder containing CSV files
         self.label_file = 'data/train_engagement_labels.xlsx'  # Path to the Excel file with labels
         self.label_column = 'label'  # Column name in the label file for labels
-
+        self.dataset_fraction = 0.05  # Use 20% of the total dataset
         # ----------------------------
         # Data Preprocessing Parameters
         # ----------------------------
         self.exclude_columns = ['frame', 'timestamp']  # Columns to exclude from features
         self.missing_value_strategy = 'interpolate'  # Strategy: 'interpolate', 'zero', 'mean'
-        self.max_sequence_length = 512  # Max sequence length after padding/truncating
+        self.max_sequence_length = 10  # Max sequence length after padding/truncating #512
 
         # ----------------------------
         # Data Augmentation Parameters
         # ----------------------------
         self.use_data_augmentation = True  # Whether to apply data augmentation
-        self.segment_length = 50  # Length of each segment for S&R augmentation
+        self.segment_length = 8  # Length of each segment for S&R augmentation #32
         self.num_augmented_samples = 1  # Number of augmented samples per original sample
 
         # ----------------------------
@@ -51,9 +51,9 @@ class Config:
         # ----------------------------
         # DataLoader Parameters
         # ----------------------------
-        self.batch_size = 1  # Number of samples per batch
-        self.num_workers = 2  # Number of subprocesses for data loading
-        self.pin_memory = True  # Whether to copy tensors into CUDA pinned memory
+        self.batch_size = 4  # Number of samples per batch
+        self.num_workers = 4  # Number of subprocesses for data loading
+        self.pin_memory = False  # Whether to copy tensors into CUDA pinned memory
 
         # ----------------------------
         # Model Hyperparameters
@@ -63,17 +63,17 @@ class Config:
         self.num_classes = 4  # Number of output classes (adjust based on your labels)
 
         # CT Stream Parameters
-        self.dim_model = 128  # Model dimension for the Conformer blocks
+        self.dim_model = 64  # Model dimension for the Conformer blocks #128
         self.num_heads = 4  # Number of attention heads in Multi-Head Attention
         self.num_layers = 2  # Number of Conformer blocks in the CT Stream
 
         # TC Stream Parameters
-        self.scales = 128  # Number of scales for the Continuous Wavelet Transform (CWT)
+        self.scales = 64  # Number of scales for the Continuous Wavelet Transform (CWT) #128
 
         # ----------------------------
         # Training Hyperparameters
         # ----------------------------
-        self.num_epochs = 50  # Number of training epochs
+        self.num_epochs = 32  # Number of training epochs #50
         self.learning_rate = 1e-4  # Learning rate for the optimizer
         self.weight_decay = 1e-5  # Weight decay (L2 regularization)
         self.gradient_clip_val = 1.0  # Max norm for gradient clipping

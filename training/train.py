@@ -4,7 +4,7 @@ import torch
 import logging
 from torch.optim import Adam
 from torch.nn import CrossEntropyLoss
-from config import Config()
+from config import Config
 from models.model import FusionNet
 from utils.logger import setup_logging
 from utils.seed import set_seed

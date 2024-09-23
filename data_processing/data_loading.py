@@ -179,6 +179,7 @@ def collate_fn(batch):
 def prepare_data(config, logger):
     """
     Prepare the data loaders and datasets based on the configuration.
+    Loads only a specified fraction of the dataset.
     """
     logger.info("Collecting File Paths and Labels...")
     file_paths, labels, feature_columns = load_csv_data(
@@ -191,35 +192,83 @@ def prepare_data(config, logger):
     # Preprocess data
     logger.info("Preprocessing data...")
     features_list, scaler, feature_names = preprocess_data(
-        file_paths, exclude_columns=config.exclude_columns,
+        file_paths,
+        exclude_columns=config.exclude_columns,
         missing_value_strategy=config.missing_value_strategy
     )
 
-    # Split into training and validation sets
+    # Ensure that features_list and labels are of the same length
+    assert len(features_list) == len(labels), "Features and labels must have the same length."
+
+    # Set seed for reproducibility
+    torch.manual_seed(config.random_state)
+
+    # Calculate the number of samples to use (e.g., 20% of the total dataset)
+    num_total = len(features_list)
+    num_subset = int(num_total * config.dataset_fraction)
+    logger.info(f"Sampling {config.dataset_fraction * 100}% of the dataset: {num_subset} samples out of {num_total}")
+
+    # Generate random indices for sampling
+    indices = torch.randperm(num_total)[:num_subset].tolist()
+
+    # Create a subset of the data using the sampled indices
+    X_subset = [features_list[i] for i in indices]
+    y_subset = [labels[i] for i in indices]
+
+    # Split the subset into training and validation sets
+    logger.info("Splitting subset into training and validation sets...")
     X_train, X_val, y_train, y_val = train_test_split(
-        features_list, labels, test_size=config.test_size,
-        stratify=labels, random_state=config.random_seed
+        X_subset,
+        y_subset,
+        test_size=config.test_size,
+        stratify=y_subset if config.test_size > 0 else None,
+        random_state=config.random_state
     )
+
+    logger.info(f"Training samples before augmentation: {len(X_train)}")
+    logger.info(f"Validation samples: {len(X_val)}")
 
     # Data augmentation (if applicable)
-    X_train_augmented, y_train_augmented = augment_dataset(
-        X_train, y_train, segment_length=config.segment_length,
-        num_augmented_samples=config.num_augmented_samples
-    )
+    if config.num_augmented_samples > 0:
+        logger.info("Augmenting training data...")
+        X_train_augmented, y_train_augmented = augment_dataset(
+            X_train,
+            y_train,
+            segment_length=config.segment_length,
+            num_augmented_samples=config.num_augmented_samples
+        )
+        logger.info(f"Training samples after augmentation: {len(X_train_augmented)}")
+    else:
+        X_train_augmented, y_train_augmented = X_train, y_train
 
-    # Create datasets and data loaders
-    logger.info("Creating DataLoader objects...")
+    # Create EngagementDataset instances
+    logger.info("Creating EngagementDataset instances...")
     train_dataset = EngagementDataset(X_train_augmented, y_train_augmented, feature_names, mode='train')
     val_dataset = EngagementDataset(X_val, y_val, feature_names, mode='val')
 
+    # Create DataLoader objects
+    logger.info("Creating DataLoader objects...")
     train_loader = DataLoader(
-        train_dataset, batch_size=config.batch_size, shuffle=True,
-        num_workers=config.num_workers, collate_fn=collate_fn, pin_memory=True
+        train_dataset,
+        batch_size=config.batch_size,
+        shuffle=True,
+        num_workers=config.num_workers,
+        collate_fn=collate_fn,
+        pin_memory=True
     )
     val_loader = DataLoader(
-        val_dataset, batch_size=config.batch_size, shuffle=False,
-        num_workers=config.num_workers, collate_fn=collate_fn, pin_memory=True
+        val_dataset,
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=config.num_workers,
+        collate_fn=collate_fn,
+        pin_memory=True
     )
+
+    # Log the number of samples
+    logger.info(f"Total samples used: {len(train_dataset) + len(val_dataset)}")
+    logger.info(f"Training samples: {len(train_dataset)}")
+    logger.info(f"Validation samples: {len(val_dataset)}")
 
     return train_loader, val_loader, train_dataset, val_dataset
 
