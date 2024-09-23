@@ -51,7 +51,7 @@ To design the modular code for your model based on **TCCT-Net** architecture as 
 ### **Detailed Modular Steps**
 
 0. **Project Structure**
-1. Parameters and Hyperparameters can be changed in utility/config.py
+1. Parameters and Hyperparameters can be changed in **utils/config.py**
 ```Iua
     Project Root/
     ├── config.py               # Global configuration instance
