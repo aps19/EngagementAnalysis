@@ -1,0 +1,27 @@
+name: tcct_gpu_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10              # Core Python version
+  - numpy=1.24.3             # Numpy for numerical operations
+  - pandas=1.5.3             # Pandas for data handling
+  - scikit-learn=1.2.2       # Scikit-learn for metrics and ML utilities
+  - scipy=1.10.1             # SciPy for scientific computing
+  - tqdm=4.65.0              # TQDM for progress bars
+  - pywavelets=1.4.1         # PyWavelets for wavelet-based processing
+  - cudatoolkit=11.7         # CUDA Toolkit for GPU support
+  - pytorch=2.0.1            # PyTorch for deep learning with GPU support
+  - torchvision=0.15.2       # TorchVision for image models
+  - pytorch-cuda=11.7        # PyTorch with CUDA support
+  - tensorboard=2.13.0       # TensorBoard for logging and visualization
+  - opencv=4.7.0             # OpenCV for video processing
+  - openpyxl                 # Openpyxl for reading and writing Excel files
+  - pip
+  - pip:
+    - matplotlib==3.7.1          # Matplotlib for visualizations
+    - torch-summary==1.4.5       # Torch-summary for model summary
+    - opencv-python-headless==4.7.0.72  # OpenCV headless version for non-GUI environments
+    - pyqt5==5.15.7              # PyQt5 for GUI functions
+    - dlib==19.24.0              # Dlib for facial landmark detection
+    - subprocess32==3.5.4        # Subprocess for process management
