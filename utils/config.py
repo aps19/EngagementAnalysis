@@ -15,11 +15,11 @@ class Config:
         # General Settings
         # ----------------------------
         self.random_seed = 42  # Seed for reproducibility
+        self.set_seed(self.random_seed)
 
         # Device Configuration
-        # self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # To force CPU usage, uncomment the following line:
-        self.device = torch.device('cuda')
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.multi_gpu = torch.cuda.device_count() > 1  # Check if multi-GPU is available
 
         # ----------------------------
         # Data Paths
@@ -27,19 +27,20 @@ class Config:
         self.data_dir = 'data/processed_dataset'  # Path to the folder containing CSV files
         self.label_file = 'data/train_engagement_labels.xlsx'  # Path to the Excel file with labels
         self.label_column = 'label'  # Column name in the label file for labels
-        self.dataset_fraction = 0.05  # Use 20% of the total dataset
+        self.dataset_fraction = 1.0  # Fraction of the dataset to use
+
         # ----------------------------
         # Data Preprocessing Parameters
         # ----------------------------
         self.exclude_columns = ['frame', 'timestamp']  # Columns to exclude from features
-        self.missing_value_strategy = 'interpolate'  # Strategy: 'interpolate', 'zero', 'mean'
-        self.max_sequence_length = 10  # Max sequence length after padding/truncating #512
+        self.missing_value_strategy = 'zero'  # Strategy: 'interpolate', 'zero', 'mean'
+        self.max_sequence_length = 512  # Max sequence length after padding/truncating
 
         # ----------------------------
         # Data Augmentation Parameters
         # ----------------------------
         self.use_data_augmentation = True  # Whether to apply data augmentation
-        self.segment_length = 8  # Length of each segment for S&R augmentation #32
+        self.segment_length = 50  # Length of each segment for augmentation
         self.num_augmented_samples = 1  # Number of augmented samples per original sample
 
         # ----------------------------
@@ -51,9 +52,9 @@ class Config:
         # ----------------------------
         # DataLoader Parameters
         # ----------------------------
-        self.batch_size = 4  # Number of samples per batch
+        self.batch_size = 64  # Number of samples per batch
         self.num_workers = 4  # Number of subprocesses for data loading
-        self.pin_memory = False  # Whether to copy tensors into CUDA pinned memory
+        self.pin_memory = True  # Whether to copy tensors into CUDA pinned memory
 
         # ----------------------------
         # Model Hyperparameters
@@ -63,17 +64,17 @@ class Config:
         self.num_classes = 4  # Number of output classes (adjust based on your labels)
 
         # CT Stream Parameters
-        self.dim_model = 64  # Model dimension for the Conformer blocks #128
+        self.dim_model = 128  # Model dimension for the Conformer blocks
         self.num_heads = 4  # Number of attention heads in Multi-Head Attention
         self.num_layers = 2  # Number of Conformer blocks in the CT Stream
 
         # TC Stream Parameters
-        self.scales = 64  # Number of scales for the Continuous Wavelet Transform (CWT) #128
+        self.scales = 128  # Number of scales for the Continuous Wavelet Transform (CWT)
 
         # ----------------------------
         # Training Hyperparameters
         # ----------------------------
-        self.num_epochs = 32  # Number of training epochs #50
+        self.num_epochs = 50  # Number of training epochs
         self.learning_rate = 1e-4  # Learning rate for the optimizer
         self.weight_decay = 1e-5  # Weight decay (L2 regularization)
         self.gradient_clip_val = 1.0  # Max norm for gradient clipping
@@ -86,18 +87,23 @@ class Config:
         self.scheduler_step_size = 10  # Step size for StepLR scheduler
         self.scheduler_gamma = 0.1  # Gamma (decay rate) for StepLR scheduler
 
-        # Mixed Precision Training
+        # ----------------------------
+        # Mixed Precision and Gradient Clipping
+        # ----------------------------
         self.use_amp = True  # Use Automatic Mixed Precision (requires compatible hardware)
         self.gradient_clip_val = 1.0  # Gradient clipping value
         self.checkpoint_dir = 'checkpoints/'  # Directory for saving checkpoints
 
-
+        # ----------------------------
         # Early Stopping
+        # ----------------------------
         self.use_early_stopping = True  # Enable early stopping
         self.early_stopping_patience = 10  # Epochs to wait before stopping
 
+        # ----------------------------
         # Resume Training
-        self.resume_training = False  # Resume training from a checkpoint
+        # ----------------------------
+        self.resume_training = True  # Resume training from a checkpoint
         self.checkpoint_path = 'checkpoints/best_model.pth'  # Path to the checkpoint file
         self.start_epoch = 1  # Starting epoch (useful when resuming)
 
@@ -113,7 +119,7 @@ class Config:
         # ----------------------------
         # Miscellaneous Settings
         # ----------------------------
-        # For CuDNN determinism
+        # CuDNN determinism
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
@@ -129,6 +135,7 @@ class Config:
         np.random.seed(seed)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
-        # For CuDNN determinism
+        # Ensure CuDNN determinism
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
