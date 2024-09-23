@@ -51,6 +51,7 @@ To design the modular code for your model based on **TCCT-Net** architecture as 
 ### **Detailed Modular Steps**
 
 0. **Project Structure**
+1. Parameters and Hyperparameters can be changed in utility/config.py
 ```Iua
     Project Root/
     ├── config.py               # Global configuration instance
@@ -332,43 +333,28 @@ To design the modular code for your model based on **TCCT-Net** architecture as 
     ```
 
 5. **Training Setup**
-    To run your script on multiple GPUs using PyTorch's **Distributed Data Parallel (DDP)**, you can use the `torch.distributed.launch` or `torchrun` utility.
+    To run your script on multiple GPUs using PyTorch **Distributed Data Parallel (DDP)**, we used the `torch.distributed.launch` or `torchrun` utility.
 
-    Here’s the command using **`torchrun`**, which is the recommended way from PyTorch 1.9.0 onwards:
-
-    ### Command to Run with Multiple GPUs (using `torchrun`):
+    ### Using **`torchrun`**,(PyTorch >=1.9.0):
 
     ```bash
     torchrun --nproc_per_node=NUM_GPUS_YOU_HAVE main.py
     ```
 
-    - Replace `NUM_GPUS_YOU_HAVE` with the number of GPUs you want to use. For example, if you want to use 4 GPUs, you would run:
-
-    ```bash
-    torchrun --nproc_per_node=4 main.py
-    ```
-
-    ### Alternatively, Using `torch.distributed.launch`:
+    ### Using `torch.distributed.launch`:
 
     ```bash
     python -m torch.distributed.launch --nproc_per_node=NUM_GPUS_YOU_HAVE main.py
     ```
 
-    For example, to run the script with 4 GPUs:
+    ### **Multi-GPU Support**: Need to wrap model in `torch.nn.parallel.DistributedDataParallel`.
 
-    ```bash
-    python -m torch.distributed.launch --nproc_per_node=4 main.py
-    ```
-
-    ### Additional Notes:
-    1. **Multi-GPU Support**: Ensure that your code is using PyTorch's `DistributedDataParallel (DDP)` if you're using multiple GPUs. You need to wrap your model in `torch.nn.parallel.DistributedDataParallel`.
-    
-    2. **Environment Variables**: Make sure `CUDA_VISIBLE_DEVICES` is correctly set if you only want to use certain GPUs. For example:
+    Make sure `CUDA_VISIBLE_DEVICES` is correctly set if you only want to use certain GPUs
     ```bash
     CUDA_VISIBLE_DEVICES=0,1,2,3 torchrun --nproc_per_node=4 main.py
     ```
 
-    3. **Ensure `local_rank` Handling**: When using DDP, each process needs to know which GPU it is assigned to, which is passed through the `--local_rank` argument.
+    **Ensure `local_rank` Handling**: When using DDP, each process needs to know which GPU it is assigned to, which is passed through the `--local_rank` argument.
 
 
 This pipeline closely follows the steps outlined in the TCCT-Net architecture, while also ensuring modularity for scalability and maintainability.
