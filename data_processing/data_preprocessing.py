@@ -1,19 +1,18 @@
-# data_preprocessing.py
-
+# data_processing/data_preprocessing.py
 import os
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
+from typing import List, Optional, Tuple
 from sklearn.preprocessing import StandardScaler
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 import logging
+from config import Config
+config = Config()
 
-
-# Ensure the logs directory exists before logging
-log_dir = './'
-os.makedirs(log_dir, exist_ok=True)
-
+# Logging
 logging.basicConfig(
-    filename=os.path.join(log_dir, 'data_preprocessing.log'),
+    filename=os.path.join(config.logs_dir, 'data_preprocessing.log'),
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
@@ -21,7 +20,8 @@ logging.basicConfig(
 def load_features(
     file_paths: List[str],
     feature_columns: Optional[List[str]] = None,
-    exclude_columns: Optional[List[str]] = None
+    exclude_columns: Optional[List[str]] = None,
+    dtype: Optional[dict] = None  # Optional dtype specification
 ) -> Tuple[List[np.ndarray], List[str]]:
     """
     Load features from CSV files and extract specified feature columns.
@@ -31,41 +31,49 @@ def load_features(
         feature_columns (Optional[List[str]]): List of feature columns to extract.
             If None, all columns except those in exclude_columns are used.
         exclude_columns (Optional[List[str]]): List of columns to exclude from features.
+        dtype (Optional[dict]): Optional dictionary specifying data types for certain columns.
 
     Returns:
         Tuple[List[np.ndarray], List[str]]: List of feature arrays and list of feature names.
     """
     features_list = []
     feature_names = []
-    for file_path in file_paths:
+
+    for file_path in tqdm(file_paths, desc="Loading Features"):
         try:
-            df = pd.read_csv(file_path)
+            # Reading CSV with low_memory=False to avoid dtype guessing issues for large files
+            df = pd.read_csv(file_path, low_memory=False, dtype=dtype)
+            
+            # If feature_columns is not provided, generate it based on exclude_columns
             if feature_columns is None:
                 if exclude_columns is None:
                     exclude_columns = []
+                # Dynamically set the feature columns by excluding the specified ones
                 feature_columns = [col for col in df.columns if col not in exclude_columns]
                 feature_names = feature_columns
             else:
                 feature_names = feature_columns
 
-            if not all(col in df.columns for col in feature_columns):
-                missing_cols = [col for col in feature_columns if col not in df.columns]
-                logging.warning(f"Missing columns {missing_cols} in {file_path}")
+            # Ensure all feature columns exist in the dataframe
+            missing_cols = [col for col in feature_columns if col not in df.columns]
+            if missing_cols:
+                logging.warning(f"Missing columns {missing_cols} in {file_path}. Skipping this file.")
                 continue
 
+            # Extract the feature values from the dataframe
             features = df[feature_columns].values
             features_list.append(features)
+
+        except pd.errors.EmptyDataError:
+            logging.error(f"Empty data error while reading {file_path}. Skipping.")
+        except FileNotFoundError:
+            logging.error(f"File not found: {file_path}. Skipping.")
         except Exception as e:
-            logging.error(f"Error loading features from {file_path}: {e}")
+            logging.error(f"Unexpected error loading features from {file_path}: {e}")
             continue
 
     return features_list, feature_names
-import os
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import StandardScaler
-from typing import List, Optional, Tuple
-
+    
 # Handle missing values
 def handle_missing_values(features_list: List[np.ndarray], strategy: str = 'interpolate') -> List[np.ndarray]:
     processed_features = []
@@ -98,7 +106,6 @@ def preprocess_data(file_paths: List[str], exclude_columns: List[str], missing_v
     features_list, scaler = normalize_features(features_list, scaler)
 
     return features_list, scaler, feature_names
-
 
 def save_preprocessed_data(
     features_list: List[np.ndarray],

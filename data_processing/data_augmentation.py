@@ -1,3 +1,5 @@
+# data_processing/data_augmentation.py
+
 import numpy as np
 from typing import List, Tuple
 
@@ -33,3 +35,4 @@ def augment_dataset(features_list: List[np.ndarray], labels: List[int], segment_
         augmented_features_list.extend([features] + augmented_sequences)
         augmented_labels.extend([label] * (1 + num_augmented_samples))
     return augmented_features_list, augmented_labels
+
