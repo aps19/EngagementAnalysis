@@ -1,5 +1,3 @@
-To design the modular code for your model based on **TCCT-Net** architecture as detailed in the paper you provided【6†source】, we will follow a pipeline design that includes several key steps. Here’s the pipeline design with detailed steps for training, testing, and validation:
-
 ### **Pipeline Design for TCCT-Net Model**
 
 1. **Preprocessing (Feature Extraction with OpenFace)**
@@ -44,7 +42,7 @@ To design the modular code for your model based on **TCCT-Net** architecture as 
     
 7. **Testing**
     - After training, run inference on the test set.
-    - Measure the test accuracy and compare the model's efficiency (inference time) with the baseline methods provided.
+    - Measure the test accuracy and compare the model's efficiency with the baseline methods provided.
 
 ---
 
